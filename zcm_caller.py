@@ -77,4 +77,4 @@ if time_end:
     time_end_raw = time_end.format("YYYY-MM-DD HH:mm:ss")
     print("结束时间为: " + time_end_raw)
 
-for current_tel in tels:
+# for current_tel in tels:
