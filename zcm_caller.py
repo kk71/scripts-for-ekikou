@@ -69,7 +69,7 @@ def filter_tels(xls_sheet):
         current_row = xls_sheet.row_values(i)
         if current_row[operator_column_num]==XLS_NAME_FILTER_TO_FILTER:
             if current_row[tel_col_num]:
-                tels.append(current_row[tel_col_num])
+                tels.append(int(current_row[tel_col_num]))
     return tels
 
 
@@ -122,7 +122,7 @@ def random_pause(tel_length):
 
 
 def generate_new_xls_filename():
-    return sys.argv[1][:-4] + " - 账户导出数据(%s).xls" % arrow.now().format("YYYY-MM-DD HH:mm:ss")
+    return sys.argv[1][:-4] + " - 账户导出数据(%s).xls" % arrow.now().format("YYYY-MM-DD HH-mm-ss")
 
 
 def main():
