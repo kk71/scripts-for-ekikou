@@ -12,7 +12,7 @@ import bs4
 
 LOGIN_INFO = {
     "username": "chenyk",
-    "password": ""
+    "password": "000123"
 }
 
 req_headers = {
@@ -43,6 +43,14 @@ XLS_NAME_FILTER_TO_FILTER = "陈益康"
 # timeout for every request
 REQ_TIMEOUT = 3
 
+# 列名对应的字段位置(页面中)
+PAGE_ROW = (
+    (0, "购买时间"),
+    (2, "产品名"),
+    (3, "金额"),
+    (4, "状态")
+)
+
 
 def is_success(code):
     return 200 <= code <= 299
@@ -71,7 +79,31 @@ def parse_account_info(html):
     :param html:
     :return:
     """
-    return
+    rst = []
+    soup = bs4.BeautifulSoup(html, "html5lib")
+    trs = soup.select("#theadFix > tbody > tr")
+    for tr in trs:
+        tr_content = []
+        for td in tr.select("td"):
+            if td.string and td.string.strip():
+                tr_content.append(td.string.strip())
+            elif td.string is None:
+                tr_content.append(td.string)
+        rst.append(tr_content)
+    return rst # 返回的是全部数据
+
+
+def filter_parsed_account_info(one_item_of_info_list):
+    """
+    从上面的 parse_account_info 中过滤出需要的数据(PAGE_ROW)
+    是每条数据
+    :param info_list:
+    :return:
+    """
+    rst = []
+    for l in PAGE_ROW:
+        rst.append(one_item_of_info_list[l[0]])
+    return rst
 
 
 def random_pause(tel_length):
@@ -87,6 +119,10 @@ def random_pause(tel_length):
     #     (200, 500): (15,20),
     # }
     time.sleep(random.randint(1,10))
+
+
+def generate_new_xls_filename():
+    return sys.argv[1][:-4] + " - 账户导出数据(%s).xls" % arrow.now().format("YYYY-MM-DD HH:mm:ss")
 
 
 def main():
@@ -126,6 +162,17 @@ def main():
         time_end = time_end.format("YYYY-MM-DD HH:mm:ss")
         print("结束时间为: " + time_end)
 
+    # 产生文件名,然后写入 xls 表的首行
+    file_name = generate_new_xls_filename()
+    print("输出文件: " + file_name)
+    doc = xlwt.Workbook()
+    sheet = doc.add_sheet("sheet1")
+    sheet.write(0,0, "电话") # 第一列为电话号码
+    for n in range(len(PAGE_ROW)):
+        sheet.write(0,n+1,PAGE_ROW[n][1])
+    doc.save(file_name)
+    current_line = 1 # 当前 xls 写的行数
+
     for current_tel in tels:
         # FIXME only fetch the first page
         resp = sess.get(URL_QUERY_ACCOUNT_PURCHASE_INFO_WITH_TIME_RANGE, params={
@@ -133,7 +180,22 @@ def main():
             "purchaseDateend":time_end,
             "account": current_tel
         }, headers=req_headers, timeout=REQ_TIMEOUT)
-        # TODO make a random pause between every request loop
+        if not is_success(resp.status_code):
+            raise Exception("请求数据时返回状态错误, code: {code}, account: {account}".format(
+                code=resp.status_code,
+                account=current_tel
+            ))
+        h = resp.content
+
+        rst = parse_account_info(h)
+        data_to_write = [[current_tel] + filter_parsed_account_info(i) for i in rst]
+        for i in range(len(data_to_write)):
+            for j in range(len(data_to_write[i])):
+                sheet.write(current_line, j, data_to_write[i][j])
+            current_line += 1 # 行数增加
+        doc.save(file_name)
+        print("写入%s" % current_tel)
+        random_pause(len(tels))
 
 
 if __name__=="__main__":
