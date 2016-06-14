@@ -146,7 +146,7 @@ def main():
     # LOGIN_INFO.update({"username":user_name,"password":password})
     resp = sess.post(URL_LOGIN, data=LOGIN_INFO, headers=req_headers)
     if not is_success(resp.status_code):
-        raise Exception("登录失败。")
+        raise Exception("登录失败。(%s)" % resp.status_code)
 
     # === requests ===
     print("查询数据…")
