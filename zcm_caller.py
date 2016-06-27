@@ -51,6 +51,16 @@ PAGE_ROW = (
     (4, "状态")
 )
 
+# delay plan
+TIME_TO_PAUSE = {
+    1: (1,10),
+    2: (1,20),
+    3: (1,30),
+    4: (1,40),
+    5: (1,50),
+    6: (1,60),
+}
+
 
 def is_success(code):
     return 200 <= code <= 299
@@ -112,13 +122,8 @@ def random_pause(tel_length):
     :param tel_length:
     :return:
     """
-    # pause_range = {
-    #     (1,50): (1,5),
-    #     (51,100): (5,10),
-    #     (150,200): (10,15),
-    #     (200, 500): (15,20),
-    # }
-    time.sleep(random.randint(1,10))
+    pause_plain = random.choice([1,2,2,3,3,4,4,4,4,5,6])
+    time.sleep(random.randint(*TIME_TO_PAUSE[pause_plain]))
 
 
 def generate_new_xls_filename():
