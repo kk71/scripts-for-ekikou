@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 #coding=utf-8
 __author__ = 'kk'
 
@@ -90,7 +91,7 @@ def parse_account_info(html):
     :return:
     """
     rst = []
-    soup = bs4.BeautifulSoup(html, "html5lib")
+    soup = bs4.BeautifulSoup(html, "html.parser")
     trs = soup.select("#theadFix > tbody > tr")
     for tr in trs:
         tr_content = []
