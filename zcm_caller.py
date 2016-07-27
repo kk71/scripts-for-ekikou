@@ -123,7 +123,7 @@ def random_pause(tel_length):
     :param tel_length:
     :return:
     """
-    pause_plain = random.choice([1,2,2,3,3,4,4])
+    pause_plain = random.choice([1,1,2,3,3])
     time.sleep(random.randint(*TIME_TO_PAUSE[pause_plain]))
 
 
