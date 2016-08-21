@@ -21,10 +21,10 @@ req_headers = {
     "Accept-Encoding":"gzip, deflate, sdch",
     "Accept-Language":"en-US,en;q=0.8,zh-CN;q=0.6,zh;q=0.4",
     "Connection":"keep-alive",
-    "DNT":1,
+    "DNT":"1",
     "Host":"zcm.zcmlc.com",
     "Referer":"http://zcm.zcmlc.com/zcm/admin/login",
-    "Upgrade-Insecure-Requests":1,
+    "Upgrade-Insecure-Requests":"1",
     "User-Agent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36"
 }
 
