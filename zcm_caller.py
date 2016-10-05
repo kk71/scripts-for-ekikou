@@ -117,13 +117,25 @@ def filter_parsed_account_info(one_item_of_info_list):
     return rst
 
 
-def random_pause(tel_length):
+def random_pause(delay_level):
     """
     make a random pause
     :param tel_length:
     :return:
     """
-    pause_plain = random.choice([1,1,2,3,3])
+    if delay_level == "1":
+        dl = [1,1,2]
+    elif delay_level=="2":
+        dl = [1,1,3]
+    elif delay_level in ("3", ""):
+        dl = [1,1,2,3,3]
+    elif delay_level=="4":
+        dl = [1,1,3,4,5]
+    elif delay_level=="5":
+        dl = [2,3,4,5,6]
+    else:
+        raise ValueError("bad delay level.")
+    pause_plain = random.choice(dl)
     time.sleep(random.randint(*TIME_TO_PAUSE[pause_plain]))
 
 
@@ -136,7 +148,10 @@ def main():
     sess = Session() # 存放此次登录的 cookie
 
     # === read xls ===
+    speed_level = input("搜索速度等级（1至5，默认为3）:")
     print("读xls电话列…")
+    if len(sys.argv)<=1:
+        raise Exception("没有输入 xls 文件")
     print("文件名: " + sys.argv[1])
     wb = xlrd.open_workbook(sys.argv[1])
     sheet1 = wb.sheet_by_index(0)
@@ -201,7 +216,7 @@ def main():
             current_line += 1 # 行数增加
         doc.save(file_name)
         print("写入%s" % current_tel)
-        random_pause(len(tels))
+        random_pause(speed_level)
 
 
 if __name__=="__main__":
