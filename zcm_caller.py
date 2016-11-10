@@ -111,6 +111,10 @@ def random_pause(delay_level):
     """
     make a random pause
     """
+    try:
+        delay_level = int(delay_level)
+    except:
+        raise ValueError("Not a number.")
     if not 1 <= delay_level <= 60:
         raise ValueError("bad delay level.")
     random_time_to_delay = random.choice(range(delay_level))
@@ -128,6 +132,9 @@ def main():
 
     # === read xls ===
     speed_level = input("搜索速度等级（1至60，默认为30）:")
+    if not speed_level:
+        speed_level = "30"
+    print(speed_level)
     print("读xls电话列…")
     if len(sys.argv)<=1:
         raise Exception("没有输入 xls 文件")
