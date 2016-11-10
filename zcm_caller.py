@@ -52,16 +52,6 @@ PAGE_ROW = (
     (4, "状态")
 )
 
-# delay plan
-TIME_TO_PAUSE = {
-    1: (1,10),
-    2: (1,20),
-    3: (1,30),
-    4: (1,40),
-    5: (1,50),
-    6: (1,60),
-}
-
 
 def is_success(code):
     return 200 <= code <= 299
@@ -120,23 +110,12 @@ def filter_parsed_account_info(one_item_of_info_list):
 def random_pause(delay_level):
     """
     make a random pause
-    :param tel_length:
-    :return:
     """
-    if delay_level == "1":
-        dl = [1,1,2]
-    elif delay_level=="2":
-        dl = [1,1,3]
-    elif delay_level in ("3", ""):
-        dl = [1,1,2,3,3]
-    elif delay_level=="4":
-        dl = [1,1,3,4,5]
-    elif delay_level=="5":
-        dl = [2,3,4,5,6]
-    else:
+    if not 1 <= delay_level <= 60:
         raise ValueError("bad delay level.")
-    pause_plain = random.choice(dl)
-    time.sleep(random.randint(*TIME_TO_PAUSE[pause_plain]))
+    random_time_to_delay = random.choice(range(delay_level))
+    print(random_time_to_delay)
+    time.sleep(random_time_to_delay)
 
 
 def generate_new_xls_filename():
@@ -148,7 +127,7 @@ def main():
     sess = Session() # 存放此次登录的 cookie
 
     # === read xls ===
-    speed_level = input("搜索速度等级（1至5，默认为3）:")
+    speed_level = input("搜索速度等级（1至60，默认为30）:")
     print("读xls电话列…")
     if len(sys.argv)<=1:
         raise Exception("没有输入 xls 文件")
