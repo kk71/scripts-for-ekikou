@@ -33,6 +33,7 @@ URL_LOGIN = "http://zcm.zcmlc.com/zcm/admin/login"
 # query account purchase info url
 URL_QUERY_ACCOUNT_PURCHASE_INFO_WITH_PAGINATION = "http://zcm.zcmlc.com/zcm/admin/userdetailbuy?Page={page}&account={account}"
 URL_QUERY_ACCOUNT_PURCHASE_INFO_WITH_TIME_RANGE = "http://zcm.zcmlc.com/zcm/admin/userdetailbuy?"
+URL_QUERY_ORDER_DETAIL = "http://zcm.zcmlc.com/zcm/admin/userdetailtradedetal"
 
 # xls tel column row name
 XLS_TEL_COL_ROW_NAME = "手机号"
@@ -44,12 +45,16 @@ XLS_NAME_FILTER_TO_FILTER = "陈益康"
 # timeout for every request
 REQ_TIMEOUT = 3
 
-# 列名对应的字段位置(页面中)
+# 列名对应的字段
 PAGE_ROW = (
-    (0, "购买时间"),
-    (2, "产品名"),
-    (3, "金额"),
-    (4, "状态")
+    "电话",
+    "订单号",
+    "姓名",
+    "购买时间",
+    "产品名",
+    "金额",
+    "状态",
+    "期限"
 )
 
 
@@ -94,17 +99,15 @@ def parse_account_info(html):
     return rst # 返回的是全部数据
 
 
-def filter_parsed_account_info(one_item_of_info_list):
+def parse_purchase_info(html):
     """
-    从上面的 parse_account_info 中过滤出需要的数据(PAGE_ROW)
-    是每条数据
-    :param info_list:
-    :return:
+    parse purchase info from an order
+    :param html:
+    :return: ("期限", "购买人姓名")
     """
-    rst = []
-    for l in PAGE_ROW:
-        rst.append(one_item_of_info_list[l[0]])
-    return rst
+    soup = bs4.BeautifulSoup(html, "html.parser")
+    trs = soup.select(".content_details > table > tbody > tr > td")
+    return trs[8].text, trs[4].text
 
 
 def random_pause(delay_level):
@@ -118,7 +121,6 @@ def random_pause(delay_level):
     if not 1 <= delay_level <= 60:
         raise ValueError("bad delay level.")
     random_time_to_delay = random.choice(range(delay_level))
-    print(random_time_to_delay)
     time.sleep(random_time_to_delay)
 
 
@@ -131,9 +133,9 @@ def main():
     sess = Session() # 存放此次登录的 cookie
 
     # === read xls ===
-    speed_level = input("搜索速度等级（1至60，默认为30）:")
+    speed_level = input("搜索速度等级（1至60，默认为20）:")
     if not speed_level:
-        speed_level = "30"
+        speed_level = "20"
     print(speed_level)
     print("读xls电话列…")
     if len(sys.argv)<=1:
@@ -146,11 +148,6 @@ def main():
 
     # === logging ===
     print("登录账户…")
-    # user_name = input("用户名: ")
-    # password = input("密码: ")
-    # if not user_name or not password:
-    #     raise Exception("用户名密码为空。")
-    # LOGIN_INFO.update({"username":user_name,"password":password})
     resp = sess.post(URL_LOGIN, data=LOGIN_INFO, headers=req_headers)
     if not is_success(resp.status_code):
         raise Exception("登录失败。(%s)" % resp.status_code)
@@ -174,9 +171,9 @@ def main():
     print("输出文件: " + file_name)
     doc = xlwt.Workbook()
     sheet = doc.add_sheet("sheet1")
-    sheet.write(0,0, "电话") # 第一列为电话号码
+    # 写入第一行，列名
     for n in range(len(PAGE_ROW)):
-        sheet.write(0,n+1,PAGE_ROW[n][1])
+        sheet.write(0,n,PAGE_ROW[n])
     doc.save(file_name)
     current_line = 1 # 当前 xls 写的行数
 
@@ -192,13 +189,22 @@ def main():
                 code=resp.status_code,
                 account=current_tel
             ))
-        h = resp.content
-
-        rst = parse_account_info(h)
-        data_to_write = [[current_tel] + filter_parsed_account_info(i) for i in rst]
-        for i in range(len(data_to_write)):
-            for j in range(len(data_to_write[i])):
-                sheet.write(current_line, j, data_to_write[i][j])
+        rst = parse_account_info(resp.content)
+        for an_order in rst:
+            order_id = an_order[1]
+            data_to_write = [current_tel, order_id]
+            print((current_tel, order_id))
+            resp = sess.get(URL_QUERY_ORDER_DETAIL, params={"account":current_tel, "id":order_id},
+                            headers=req_headers,
+                            timeout=REQ_TIMEOUT)
+            with open(order_id + ".html", "w") as z:
+                z.write(resp.content.decode("utf-8"))
+            new_rst = parse_purchase_info(resp.content)
+            data_to_write.append(new_rst[1])
+            data_to_write += [an_order[0], an_order[2], an_order[3], an_order[4]]
+            data_to_write.append(new_rst[0])
+            for j in range(len(data_to_write)):
+                sheet.write(current_line, j, data_to_write[j])
             current_line += 1 # 行数增加
         doc.save(file_name)
         print("写入%s" % current_tel)
