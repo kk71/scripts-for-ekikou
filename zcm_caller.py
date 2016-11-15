@@ -197,8 +197,6 @@ def main():
             resp = sess.get(URL_QUERY_ORDER_DETAIL, params={"account":current_tel, "id":order_id},
                             headers=req_headers,
                             timeout=REQ_TIMEOUT)
-            with open(order_id + ".html", "w") as z:
-                z.write(resp.content.decode("utf-8"))
             new_rst = parse_purchase_info(resp.content)
             data_to_write.append(new_rst[1])
             data_to_write += [an_order[0], an_order[2], an_order[3], an_order[4]]
