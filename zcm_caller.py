@@ -148,6 +148,10 @@ def main():
 
     # === logging ===
     print("登录账户…")
+    verify_code = input("输入你当前的验证码：")
+    while not verify_code:
+        verify_code = input("输入你当前的验证码：")
+    LOGIN_INFO.update({"code": verify_code})
     resp = sess.post(URL_LOGIN, data=LOGIN_INFO, headers=req_headers)
     if not is_success(resp.status_code):
         raise Exception("登录失败。(%s)" % resp.status_code)
